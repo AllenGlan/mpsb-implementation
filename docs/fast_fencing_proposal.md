@@ -1,0 +1,7 @@
+# Implementation: Fast Fencing
+
+In this implementation project, we will analyze and implement the fast fencing algorithm proposed by Abrahamsen et al. [1]. The *fence enclosure* problem is described as follows: Given a set of points on the plane, find a set of closed curves such that 1) each point is enclosed by a curve and 2) the total length of the curves is minimized [1]. We will study the fast fencing algorithm in the context of specific computer architectures, and compare the performance of various implementations of both the algorithm and its supporting data structures. We will discuss the optimizations proposed in [1] and study their empirical impact on performance. Additionally, we will discuss the applications of the fast fencing algorithm, such as those highlighted in [2].
+
+[1] Mikkel Abrahamsen, Anna Adamaszek, Karl Bringmann, Vincent Cohen-Addad, Mehran Mehr, Eva Rotenberg, Alan Roytman, and Mikkel Thorup. 2018. Fast Fencing. CoRR abs/1804.00101 (2018).
+
+[2] Stephen G. Dicke and Britt Hubbard. 2008. Tree protection standards in construction sites. (2008). The Forest and Wildlife Research Center, Mississippi State University Extension Service, http://fwrc.msstate.edu/pubs/treeprotection.pdf.

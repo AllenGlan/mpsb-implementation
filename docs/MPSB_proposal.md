@@ -1,0 +1,9 @@
+# Implementing Minimum Perimeter-Sum Bipartition
+
+In this implementation project, we will implement and analyze the subquadratic minimum perimeter-sum bipartition algorithm proposed by Abrahamsen et al. [1]. The *minimum perimeter-sum bipartition problem* is described as follows: Given a set of points on a plane, find a 2-partitioning of the set such that the sum of the convex hull perimeters is minimized. We will implement the algorithm in a high-level language and benchmark its performance by counting the number of basic operations. We will study the algorithm extensively in the context of varying inputs, and attempt to identify the characteristics of "malicious" inputs that enforces the algorithm to match its worst running time. We propose three approaches to this objective:
+
+1. The algorithm of interest produces two different runtime bounds, depending on the separation angle and separation distance of the optimal partition. We will attempt to exploit this distinction by designing edge cases for the better-performing variant to perform poorly.
+2. The algorithm leverages a compressed quadtree data structure. We will attempt to design cases for quadtree operations to match their worst runtime.
+3. We recognize that the inputs to this algorithm can be easily defined, as each point is defined by two coordinates, and there exists no structural relationship between points. This nature enables us to derive and employ a continuous optimization approach to identify the bad-performing inputs. Specifically, we will design a stochastic gradient scheme to optimize the input set for worse runtime. We will discuss the results and analyze the causes for their poor performance.
+
+[1] M. Abrahamsen, M. de Berg, K. Buchin, M. Mehr, and A. D. Mehrabi. Minimum perimeter-sum partitions in the plane. In Proceedings of the 33rd International Symposium on Computational Geometry, pages 4:1–4:15, 2017.
