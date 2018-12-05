@@ -1,3 +1,11 @@
+/*
+ * Håkon Flatval 2018
+ * 
+ * Source file to demonstrate and visualize the workings of 
+ * the tangent.c file, which is provided in the paper
+ * Computing Common Tangents Without a Separating Line
+ * by David Kirkpatrick and Jack Snoeyink.
+ */
 
 #ifdef WITH_HCONLIB
 #include "HGraf.h"
@@ -10,7 +18,6 @@
 #include <algorithm>
 #include <random>
 
-// using namespace std;
 
 // Double version of dPoint2
 typedef struct dPoint2 {
