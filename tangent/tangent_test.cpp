@@ -12,27 +12,13 @@
 #include "Winval.h"
 #endif // WITH_HCONLIB
 
+#include <common.hpp>
+
 #include "tangent.h"
 
 #include <cstdio>
-#include <algorithm>
 #include <random>
 
-
-// Double version of dPoint2
-typedef struct dPoint2 {
-  double x;
-  double y;
-  double& operator[](int a);
-} dPoint2;
-
-double& dPoint2::operator[](int a){
-  if( a == 0) {
-    return x;
-  } else {
-    return y;
-  }
-}
 
 int xToDisplay(double x, int w) {
   return (int)(((x + 2 * 1024)+ 500) / (5. * 1024  + 1000) * w);
@@ -42,68 +28,6 @@ int yToDisplay(double y, int h) {
   return (int)(((y + 1024) + 500) / (2048  + 1000) * h);
 }
 
-bool comp(const dPoint2& p, const dPoint2& q) {
-  return p.x < q.x;
-}
-
-bool turning_left(const double* p0, const double* p1, const double* p2) {
-  double v0[2], v1[2];
-
-  v0[0] = p1[0] - p0[0];
-  v0[1] = p1[1] - p0[1];
-
-  v1[0] = p2[0] - p1[0];
-  v1[1] = p2[1] - p1[1];
-
-  return v0[0] * v1[1] - v0[1] * v1[0] > 0;
-}
-
-bool turning_left(const dPoint2& p0, const dPoint2& p1, const dPoint2& p2) {
-  return turning_left((const double*)&p0, (const double*)&p1, (const double*)&p2);
-}
-
-void convex_hull(double* source, const int sourceCount,
-		 double* dest, int* destCount) {
-  dPoint2* sourceA = (dPoint2*) source;
-  dPoint2* destA = (dPoint2*) dest;
-  
-  for(int i = 0; i < sourceCount; i++ ) {
-    if(*destCount < 2) {
-      destA[*destCount][0] = sourceA[i][0];
-      destA[*destCount][1] = sourceA[i][1];
-      (*destCount)++;
-      continue;
-    }
-    if(turning_left(destA[(*destCount) - 2], destA[(*destCount) - 1], sourceA[i])) {
-      destA[*destCount][0] = sourceA[i][0];
-      destA[*destCount][1] = sourceA[i][1];
-      (*destCount)++;
-    } else {
-      (*destCount)--;
-      i--; // Do this one again
-    }
-  }
-
-  // Insert second to last point, to correctly handle case where
-  // the hull goes (n - 2) -> (n - 1) -> (n - 2)
-  destA[*destCount][0] = sourceA[sourceCount - 2][0];
-  destA[*destCount][1] = sourceA[sourceCount - 2][1];
-  (*destCount)++;
-
-  for(int i = sourceCount - 3; i >= 0; i--) {
-    if(turning_left(destA[(*destCount) - 2], destA[(*destCount) - 1], sourceA[i])) {
-      destA[*destCount][0] = sourceA[i][0];
-      destA[*destCount][1] = sourceA[i][1];
-      (*destCount)++;
-    } else {
-      (*destCount)--;
-      i++;
-    }
-  }
-
-  // Let's not count first one twice
-  (*destCount)--;
-}
 
 int main(int argc, const char ** argv) {
 
@@ -142,10 +66,6 @@ int main(int argc, const char ** argv) {
   }
 
   // Compute convex hulls
-  
-  // Sort points by x coordinate
-  std::sort((dPoint2*)(P.v), (dPoint2*)(P.v) + P.n, comp);
-  std::sort((dPoint2*)(Q.v), (dPoint2*)(Q.v) + Q.n, comp);
 
   // Polygons holding convex hulls
   Polygon pc, qc;
