@@ -72,11 +72,11 @@ int main(int argc, const char ** argv) {
 
   pc.n = 0, qc.n = 0;
   
-  convex_hull((double*) P.v, P.n,
-	      (double*) pc.v, &pc.n);
+  convex_hull((dPoint2*) P.v, P.n,
+	      (dPoint2*) pc.v, &pc.n);
 
-  convex_hull((double*) Q.v, Q.n,
-	      (double*) qc.v, &qc.n);
+  convex_hull((dPoint2*) Q.v, Q.n,
+	      (dPoint2*) qc.v, &qc.n);
 
   
   // Compute common tangent

@@ -3,6 +3,11 @@
 
 // dPoint2 functions and operators
 
+dPoint2::dPoint2() {
+  this->x = 0;
+  this->y = 0;
+}
+
 dPoint2::dPoint2(double x, double y) {
   this->x = x;
   this->y = y;
@@ -14,6 +19,14 @@ double& dPoint2::operator[](int a){
 
 dPoint2 dPoint2::operator+(const dPoint2& p2) const {
   return dPoint2(x + p2.x, y + p2.y);
+}
+
+bool dPoint2::operator!=(const dPoint2& p2) const {
+  return p2.x != this->x || p2.y != this->y;
+}
+
+bool dPoint2::operator==(const dPoint2& p2) const {
+  return p2.x == this->x && p2.y == this->y;
 }
 
 dPoint2 dPoint2::operator-(const dPoint2& p2) const {
@@ -48,17 +61,17 @@ bool turning_left(const double* p0, const double* p1, const double* p2) {
   v1[0] = p2[0] - p1[0];
   v1[1] = p2[1] - p1[1];
 
-  return v0[0] * v1[1] - v0[1] * v1[0] > 0;
+  return (v0[0] * v1[1] - v0[1] * v1[0] > 0) ||
+    v0[0] * v0[0] + v0[1] * v0[1] == - (v0[0] * v1[0] + v0[1] * v0[1]);
 }
 
 bool turning_left(const dPoint2& p0, const dPoint2& p1, const dPoint2& p2) {
   return turning_left((const double*)&p0, (const double*)&p1, (const double*)&p2);
 }
 
-void convex_hull(double* source, const int sourceCount,
-		 double* dest, int* destCount) {
-  dPoint2* sourceA = (dPoint2*) source;
-  dPoint2* destA = (dPoint2*) dest;
+// NB: sourceA will be sorted here, make sure that's ok
+void convex_hull(dPoint2* sourceA, const int sourceCount,
+		 dPoint2* destA, int* destCount) {
 
   std::sort(sourceA, sourceA + sourceCount, compare_on_x);
   
