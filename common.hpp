@@ -19,6 +19,7 @@ struct dPoint2 {
 
 double cross(const dPoint2& p1, const dPoint2& p2);
 double dot(const dPoint2& p1, const dPoint2& p2);
+double length(const dPoint2& p1);
 
 bool compare_on_x(const dPoint2& p, const dPoint2& q);
 bool turning_left(const double* p0, const double* p1, const double* p2);

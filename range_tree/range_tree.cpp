@@ -9,11 +9,18 @@
 
 static void combine_convex_hulls(dPoint2* hull1, int n1,
 				 dPoint2* hull2, int n2,
-				 dPoint2** res, int *resn){
+				 dPoint2** res, int *resn,
+				 double* hullLength1, double* hullLength2,
+				 double** resHullLength){
   if(n1 == 1 && n2 == 1) {
     *res = new dPoint2[2];
     (*res)[0] = hull1[0];
     (*res)[1] = hull2[0];
+    
+    *resHullLength = new double[2];
+    (*resHullLength)[0] = 0;
+    (*resHullLength)[1] = length(hull1[0] - hull2[0]);
+    
     *resn = 2;
     return;
   }
@@ -48,21 +55,35 @@ static void combine_convex_hulls(dPoint2* hull1, int n1,
     }
 
     *res = new dPoint2[s];
+    *resHullLength = new double[s];
 
     int k = j, u = 0;
+    double startL = hullLength1[k];
     while(k != i) {
       (*res)[u] = hull1[k];
-      k = (k + 1) % n1;
+      (*resHullLength)[u] = hullLength1[k] - startL;
+      // k = (k + 1) % n1;
+      k++;
+      if(k == n1) {
+	startL -= hullLength1[n1 - 1] + length(hull1[n1 - 1] - hull1[0]);  
+	k = 0;
+      }
       u++;
     }
     
     (*res)[u] = hull1[i];
     (*res)[u + 1] = hull2[0];
+
+    (*resHullLength)[u] = hullLength1[i] - startL;
+    (*resHullLength)[u + 1] = (*resHullLength)[u] + length(hull2[0] - hull1[i]);
+    
     *resn = s;
   } else if (n1 == 1) {
     combine_convex_hulls(hull2, n2,
 			 hull1, n1,
-			 res, resn);
+			 res, resn,
+			 hullLength2, hullLength1,
+			 resHullLength);
   } else {
     Polygon P, Q;
     P.n = n1;
@@ -103,27 +124,42 @@ static void combine_convex_hulls(dPoint2* hull1, int n1,
     // Allocate...
     *resn = s;
     *res = new dPoint2[s];
+    *resHullLength = new double[s];
 
     // Then trace again to actually put nodes in hull
     
     i = p2, s = 1;
+    double startL = hullLength1[i];
     (*res)[0] = hull1[i];
+    (*resHullLength)[0] = 0;
     while(i != p1) {
-      i = (i + 1) % P.n;
+      // i = (i + 1) % P.n;
+      if(++i == P.n) {
+	startL = startL - hullLength1[P.n - 1] - length(hull1[0] - hull1[P.n - 1]);
+	i = 0;
+      }
       (*res)[s] = hull1[i];
+      (*resHullLength)[s] = hullLength1[i] - startL;
       s++;  
     }
 
     i = q1;
     (*res)[s] = hull2[i];
+    (*resHullLength)[s] = length(hull2[i] - hull1[p1]) + (*resHullLength)[s - 1];
+    double accDiff = (*resHullLength)[s] - hullLength2[i];
     s++;
     
     while(i != q2) {
-      i = (i + 1) % Q.n;
+      // i = (i + 1) % Q.n;
+      if(++i == Q.n) {
+	accDiff += hullLength2[Q.n - 1] + length(hull2[0] - hull2[Q.n - 1]);
+	i = 0;
+      }
       (*res)[s] = hull2[i];
+      (*resHullLength)[s] = hullLength2[i] + accDiff;
       s++;
     }
-  }	   
+  }
 }
 
 // NB!! points* must be sorted beforehand, also on top level (e.g. sorted on x-coordinate)
@@ -148,6 +184,9 @@ RangeTree* build_tree(int numLevels,
       
       tn->convexHull = new dPoint2[1];
       tn->convexHull[0] = tn->points[0];
+      
+      tn->accHullLength = new double[1];
+      tn->accHullLength[0] = 0;
     }
     
     tn->numPoints = numPoints;
@@ -170,7 +209,9 @@ RangeTree* build_tree(int numLevels,
 
     combine_convex_hulls(tn->left->convexHull, tn->left->hullSize,
 			 tn->right->convexHull, tn->right->hullSize,
-			 &(tn->convexHull), &(tn->hullSize));
+			 &(tn->convexHull), &(tn->hullSize),
+			 tn->left->accHullLength, tn->right->accHullLength,
+			 &(tn->accHullLength));
 
     
   } else {
@@ -201,6 +242,7 @@ void destroy_tree(RangeTree* t) {
   if(t->level == 1) {
     delete[] t->points;
     delete[] t->convexHull;
+    delete[] t->accHullLength;
   }
 
   delete t;

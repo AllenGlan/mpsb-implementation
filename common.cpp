@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <cmath>
+
 #include <common.hpp>
 
 // dPoint2 functions and operators
@@ -45,6 +47,9 @@ double dot(const dPoint2& p1, const dPoint2& p2) {
   return p1.x * p2.x + p1.y * p2.y;
 }
 
+double length(const dPoint2& p1) {
+  return sqrt(p1.x * p1.x + p1.y * p1.y);
+}
 
 // Geometric utilities
 
