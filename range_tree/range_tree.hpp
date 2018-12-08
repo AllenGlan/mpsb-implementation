@@ -18,6 +18,7 @@ struct RangeTree {
   int numPoints;
 
   dPoint2* convexHull;
+  double* accHullLength;
   int hullSize;
 };
 
