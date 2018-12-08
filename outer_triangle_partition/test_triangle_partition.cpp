@@ -16,9 +16,9 @@
 #include <vector>
 #include <string>
 
-#include <chrono>
+#include <ctime>
 
-#define NUM_PTS (10000)
+#define NUM_PTS (100)
 #define GEN_PTS (1)
 #define PTS_FILE ("pts_file.csv")
 #define PERF_FILE ("perf_file.csv")
@@ -113,12 +113,11 @@ if (GEN_PTS) {
 
   int hullSize = 0;
 
-  auto convex_hull_start = std::chrono::high_resolution_clock::now();
+  auto convex_hull_start = std::clock();
   convex_hull(points, NUM_PTS,
 	      hull, &hullSize);
-  auto convex_hull_stop = std::chrono::high_resolution_clock::now();
-  auto convex_hull_duration = std::chrono::duration_cast<std::chrono::microseconds>
-        (convex_hull_stop - convex_hull_start);
+  auto convex_hull_stop = std::clock();
+  double convex_hull_duration = 1000.0 * (convex_hull_stop - convex_hull_start) / CLOCKS_PER_SEC;
 
 #if WITH_HCONLIB
   setupVisualization(&win, &vas,
@@ -127,13 +126,12 @@ if (GEN_PTS) {
 
   std::vector<std::vector<dPoint2> > sets;
 
-  auto outer_triangle_start = std::chrono::high_resolution_clock::now();
+  auto outer_triangle_start = std::clock();
   outer_triangle_partition(points, NUM_PTS,
 			  hull, hullSize,
 			  sets);
-  auto outer_triangle_stop = std::chrono::high_resolution_clock::now();
-  auto outer_triangle_duration = std::chrono::duration_cast<std::chrono::microseconds>
-        (outer_triangle_stop - outer_triangle_start);
+  auto outer_triangle_stop = std::clock();
+  double outer_triangle_duration = 1000.0 * (outer_triangle_stop - outer_triangle_start) / CLOCKS_PER_SEC;
 
 #if WITH_HCONLIB
   
@@ -160,12 +158,10 @@ if (GEN_PTS) {
   // write and print performance information
   std::ofstream perf_file;
   perf_file.open(PERF_FILE);
-  perf_file << "convex_hull" << "," << convex_hull_duration.count() << std::endl;
-  perf_file << "outer_triangle_partition" << "," << outer_triangle_duration.count() << std::endl;
+  perf_file << "convex_hull" << "," << convex_hull_duration << std::endl;
+  perf_file << "outer_triangle_partition" << "," << outer_triangle_duration << std::endl;
   perf_file.close();
 
-
-  std::cout << "Time: Convex hull: " << convex_hull_duration.count() << " microseconds" << std::endl;
-  std::cout << "Time: Outer triangle partition: " << outer_triangle_duration.count() << " microseconds" << std::endl;
-  
+  std::cout << "Time: Convex hull: " << convex_hull_duration << " ms" << std::endl;
+  std::cout << "Time: Outer triangle partition: " << outer_triangle_duration << " ms" << std::endl;
 }
