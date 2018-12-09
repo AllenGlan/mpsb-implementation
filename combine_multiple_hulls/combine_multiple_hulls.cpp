@@ -365,10 +365,14 @@ void construct_half_hull(const std::vector<dPoint2*>& hulls,
 
   }
   
-  // Then go through chosen polygons, construct hull
 
   // Now, go through the polygons found to form a convex hull and actually trace out the hull itself
   int accLength = 0;
+  if(res.size() > 0) {
+    // Signal to continue length computation from previous by setting to negative
+    accLength = -resLength[resLength.size() - 1];
+  }
+  
   for(int i = 0; i < chosen_polygons.size(); i++) {
     int ind = chosen_polygons[i];
     int s, e;
@@ -394,6 +398,9 @@ void construct_half_hull(const std::vector<dPoint2*>& hulls,
       e = bridge_indices[i].first;
     }
 
+    if(accLength < 0) {
+      accLength = - accLength + length(res[res.size() - 1] - new_polygons[ind][s]);
+    }
     // Trace boundary between points
     while(s != e) {
       // Tracing backwards (I just realized we have to reverse the entire thing in the end)
@@ -485,8 +492,15 @@ void combine_multiple_convex_hulls(const std::vector<dPoint2*>& hulls,
   res.pop_back();
   resLength.pop_back();
 
-  // res.reverse();
-  // resLength.reverse(); 
+  // Reverse (because I'm stupid)
+  for(int i = 1; i < (res.size() + 1)/ 2; i++) {
+    std::swap(res[i], res[res.size() - i]);
+  }
+
+  // Yes.. This is bad
+  for(int i = 1; i < res.size(); i++) {
+    resLength[i] = resLength[i - 1] + length(res[i] - res[i - 1]);
+  }
 }
 
 // Violently violates the expected running time... Oh well

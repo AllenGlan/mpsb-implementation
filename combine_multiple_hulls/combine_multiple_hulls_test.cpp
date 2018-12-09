@@ -1,7 +1,7 @@
 
-#include <drawing.cpp>
+#include <drawing.hpp> 
 
-#include <combine_multiple_hulls.cpp> // Commiting war crimes because that is what we are
+#include <combine_multiple_hulls.cpp> // Commiting war crimes because that is what we are now
 #include <range_tree.hpp>
 
 
@@ -104,9 +104,9 @@ int main(int argc, const char** argv) {
     }
     
     draw_hull(subtrees[i]->convexHull, subtrees[i]->hullSize, 0xFFFFFF);
-    vas[screenY(subtrees[i]->convexHull[0].y) * width + screenX(subtrees[i]->convexHull[0].x)] = 0xFFFFFF; 
+    // vas[screenY(subtrees[i]->convexHull[0].y) * width + screenX(subtrees[i]->convexHull[0].x)] = 0xFFFFFF; 
   }
-
+  
   show();
   wait();
 

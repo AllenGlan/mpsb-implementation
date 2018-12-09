@@ -52,7 +52,7 @@ int screenX(double x);
 
 int screenY(double y);
 
-void highlight_point(const dPoint2& p1);
+// void highlight_point(const dPoint2& p1);
 
 
 void initialize_visualization(Winval* winval, hg::Canvas* canvas,

@@ -19,7 +19,7 @@ ifeq ($(USE_HCONLIB), 1)
 endif
 
 
-OBJS = range_tree.o combine_multiple_hulls_test.o common.o tangent.o
+OBJS = range_tree.o drawing.o combine_multiple_hulls_test.o common.o tangent.o 
 EXEC = main
 
 
@@ -37,6 +37,8 @@ tangent.o:
 	c++ $(CFLAGS) -c $(MPSB_ROOT)/tangent/tangent.c -o $@
 range_tree.o:
 	c++ $(CFLAGS) -c $(MPSB_ROOT)/range_tree/range_tree.cpp -o $@
+drawing.o:
+	c++ $(CFLAGS) -c $(MPSB_ROOT)/drawing.cpp -o $@
 
 %.o: %.c*
 	c++ $(CFLAGS) -c $<
