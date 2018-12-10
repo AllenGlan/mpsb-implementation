@@ -1,2 +1,5 @@
 .vscode/
 .ipynb_checkpoints/
+**/perf_file.csv
+**/pts_file.csv
+**/main
