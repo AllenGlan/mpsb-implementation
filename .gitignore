@@ -2,4 +2,6 @@
 .ipynb_checkpoints/
 **/perf_file.csv
 **/pts_file.csv
+**/pts_p_file.csv
+**/pts_q_file.csv
 **/main
