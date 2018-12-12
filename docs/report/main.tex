@@ -39,18 +39,20 @@ The Minimum Perimeter-Sum Bipartition problem is the problem of partitioning a s
 % Fill out more details about bounds and related work - like in the algorithmic paper?
 \subsection{The Scope of this Project}
 
-Our goal has been to assess the effects of various inputs on the running time of an implementation of the algorithm \cite{abb17}. 
+Our goal has been to assess the effects of various inputs on the running time of an implementation of the algorithm presented in \cite{abb17}. 
 
-We have not implemented the entire algorithm, but has concentrated on the subroutines we have identified to impose the greatest impact on the running time. 
-We have failed to implement one of the important subroutines - the one we call \texttt{combine\_convex\_hulls} - within time bound. We have not been able to identify a way that allows us to withhold this bound in practice. We will discuss this issue by the end of this report.
+We have not implemented the entire algorithm, but have concentrated on the subroutines we have identified to impose the greatest impact on the running time. 
+We have failed to implement one of the important subroutines---the one we call \texttt{combine\_convex\_hulls}---within the specified time bound. We have not been able to identify a way that allows us to withhold this bound in practice. We will briefly discuss the issue by the end of this report.
 
-In addition to implementing a number of the subroutines, we give here an analysis of how different input sets affect the performance of the algorithm, and discuss our method of constructing such input sets.
+We have thus implemented a number of the subroutines, and give an analysis of how different input sets affect the performance of the algorithm, and discuss our method of constructing such input sets.
 
 Our implementation is publicly available \cite{hm18}.
 
 \section{Background}
 
 % Description of the problem and the algorithm
+
+We here give a summary of the algorithm solving the Minimum Perimeter-Sum Bipartition Problem.
 
 Abrahamsen et al. \cite{abb17} shows that, for any optimal partition $\{P_1^*, P_2^*\}$ of the input points, the following holds:
 
@@ -149,11 +151,23 @@ For convenience, we summarize the main steps of the algorithm here. The highest 
     \item Construct $O(n)$ squares, and intersect each of them with $O(1)$ lines. Precompute $O(1)$ three-level range trees searchable in x- and y-axis and in the direction perpendicular to one of the $O(1)$ lines. For each square and each line (which we think of the line as a two complementary half planes), find the set of points in the intersection of the square and the half plane by a query into the appropriate range tree, and similarily, find the rest of the points in $P$ by more queries, retrieving $O(\log^3 n)$ hulls. Combine the hulls belonging to each of these two sets in $O(\log^4)$ time, and find their lengths. This finds the best partition where the sets have a "large" separation distance.
 \end{itemize}
 
-The outline of the program flow is show in figure \ref{fig:hierarchy}.
+The outline of the program flow is show in \figref{fig:hierarchy}.
 
 \section{Implementation}
 
+\subsection{Perturbation}
+
+As a preprocessing step of our input points, we perform an operation inspired by \textit{symbolic perturbation} \cite{edelsbrunner90} on the input points. 
+
+We want to avoid degeneracies in our input set. That is, we want to avoid having three distinct point lying on the same line. Such colinear points form special edge cases to several of our algorithms, which would increase the complexity of our implementation significantly. 
+
+We have chosen a very simple approach to address this that has worked well in our analysis. Each point $p_i$ is displaced by a small vector $\epsilon_i$ drawn from a normal distribution. Note that the sum of perimeters of the optimal bipartition cannot change by more than a constant times $\max |\epsilon_i|$, and that the difference of the sum of perimeters in an optimal partition and a suboptimal one is non-infinitesimal. This means that choosing $\epsilon_i$ small enough will ensure that the optimal bipartition we find is indeed optimal when using the original coordinates of the points as well.
+
+Naturally, this step is not a deterministic solution to the problem of degeneracy, but suffices in our analysis under controlled conditions. Real implementations would do wisely in making this process deterministic.
+
 \subsection{Hierarchy of Subroutines}
+
+Here follows a description of the most important subroutines found in the algorithm. Refer to figure \ref{fig:hierarchy} for an overview of the relations between them.
 
 % Dependency information of the subroutines
 \begin{figure}[ht]
@@ -162,8 +176,6 @@ The outline of the program flow is show in figure \ref{fig:hierarchy}.
     \caption{Structural hierarchy of subroutines}
     \label{fig:hierarchy}
 \end{figure}
-
-The structural hierarchy of the subroutines for this algorithm is outlined in \figref{fig:hierarchy}.
 
 \subsubsection{Partial Convex Hull Scan}
 
@@ -187,6 +199,15 @@ For two polygons $A$ and $B$, computes their tangents using the algorithm provid
 
 \subsubsection{Convex Hull Combining}
 For a given set of convex hulls $\mathcal{C}$, finds the convex hull of all points on all the hulls. We use this to combine the convex hulls found from a query in the range tree described above, including its length, so that we can evaluate the perimeter. The running time for this subroutine is $O(k \log m)$, $k$ being the number of convex polygons, and $m$ the number of points on the hulls in total.
+
+\subsection{Choosing Subroutines to Implement}
+
+As mentioned in the introduction, we have decided to only implement a subset of the subroutines. The subroutines we have decided to cover are: \texttt{construct\_range\_tree(s)}, \texttt{range\_tree\_query}, and \texttt{combine\_convex\_hull}. In addition, we have included the implementation of \texttt{compute\_tangent} directly adapted from \cite{ks95}, as this serves as a component to other subroutines. 
+
+We have chosen these subroutines because their individual performances are likely to have a huge impact on the total performance in practice. This conclusion is drawn on the basis that they are run a large constant number of times, in the order of $18001^2$. We leave a note on how to optimize this in section \ref{challenge_practice}, but still leaving a large number of iterations.
+
+We have also implemented \texttt{outer\_triangle\_partition}, which is a subroutine we had to design ourselves. 
+% Should we provide analysis for the outer_triangle_partition subroutine?
 
 \section{Performance and Input Design}
 
@@ -341,7 +362,7 @@ To be concrete, given a process of generating a point set $P$, we are interested
 
 
 
-\subsection{Input Generation via Gradient Descent}
+%\subsection{Input Generation via Gradient Descent}
 
 % Experimental input generation
 
