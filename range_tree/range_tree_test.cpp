@@ -17,7 +17,7 @@
 #define PERF_FILE ("perf_file.csv")
 
 #define NUM_PTS_MAX 100000
-#define FIND_REPEATS 100000
+#define FIND_REPEATS 1
 
 dPoint2 points[NUM_PTS_MAX];
 
@@ -162,8 +162,10 @@ int main(int argc, const char** argv) {
   perf_file.open(PERF_FILE);
   perf_file << "build" << "," << build_duration << std::endl;
   perf_file << "find" << "," << find_duration << std::endl;
+  perf_file << "subtrees" << "," << subtrees.size() << std::endl;
   perf_file.close();
 
   std::cout << "Time: Build: " << build_duration << " ns" << std::endl;
   std::cout << "Time: Find: " << find_duration << " ns" << std::endl;
+  std::cout << "Num: Subtrees: " << subtrees.size() << std::endl;
 }
