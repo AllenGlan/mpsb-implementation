@@ -10,21 +10,21 @@
 #include <random>
 #include <algorithm>
 
+// For performance analysis
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <string>
-
 #include <ctime>
 
-#define NUM_PTS (100)
-#define GEN_PTS (1)
+#define NUM_PTS_MAX (100000)
+#define GEN_PTS (0)
 #define PTS_FILE ("pts_file.csv")
 #define PERF_FILE ("perf_file.csv")
 
-dPoint2 points[NUM_PTS];
-dPoint2 hull[NUM_PTS + 2]; // Add some padding for extra elements
+dPoint2 points[NUM_PTS_MAX];
+dPoint2 hull[NUM_PTS_MAX + 2]; // Add some padding for extra elements
 
 const int width = 600, height = 600;
 
@@ -32,11 +32,11 @@ double maxx, minx,
   maxy, miny;
 
 
-void compute_max_dims() {
+void compute_max_dims(int num_pts) {
   maxx = minx = points[0].x;
   maxy = miny = points[0].y;
   
-  for(int i = 0; i < NUM_PTS; i++) {
+  for(int i = 0; i < num_pts; i++) {
     maxx = std::max(maxx, points[i].x);
     maxy = std::max(maxy, points[i].y);
     minx = std::min(minx, points[i].x);
@@ -70,27 +70,29 @@ int main(int argc, const char ** argv) {
   
 #endif // WITH_HCONLIB
 
-if (GEN_PTS) {
-  // random points generation
-  for(int i = 0; i < NUM_PTS; i++ ){
-    points[i] = dPoint2((rand() % 23113) ^ 1321,
-			(rand() % 34082) ^ 1443);
+  if (GEN_PTS) {
+    // random points generation
+    for(int i = 0; i < NUM_PTS_MAX; i++ ){
+      points[i] = dPoint2((rand() % 23113) ^ 1321,
+  			(rand() % 34082) ^ 1443);
+    }
+    
+    // output points to file
+    std::ofstream pts_file;
+    pts_file.open(PTS_FILE);
+    for (int i = 0; i < NUM_PTS_MAX; i++){
+      pts_file << points[i].x << "," << points[i].y << std::endl;
+    }
+    pts_file.close();
   }
-  
-  // output points to file
-  std::ofstream pts_file;
-  pts_file.open(PTS_FILE);
-  for (int i = 0; i < NUM_PTS; i++){
-    pts_file << points[i].x << "," << points[i].y << std::endl;
-  }
-  pts_file.close();
-}
+
+  int num_pts = 0;
 
   // read points from file
   std::string line;
   std::ifstream pts_file PTS_FILE;
   if (pts_file.is_open()) {
-    for (int i = 0; i < NUM_PTS; i++){
+    for (int i = 0; i < NUM_PTS_MAX; i++){
       if (getline(pts_file, line)) {
         std::stringstream ss(line);
         std::vector<double> pnt;
@@ -100,8 +102,9 @@ if (GEN_PTS) {
           pnt.push_back(std::stod(coord));
         }
         points[i] = dPoint2(pnt[0], pnt[1]);
+        num_pts++;
       } else {
-        std::cout << "Error encountered while reading " << PTS_FILE << std::endl;
+        break;
       }
     }
     pts_file.close();
@@ -109,12 +112,12 @@ if (GEN_PTS) {
     std::cout << "Unable to open " << PTS_FILE << "\n";
   }
 
-  compute_max_dims();
+  compute_max_dims(num_pts);
 
   int hullSize = 0;
 
   auto convex_hull_start = std::clock();
-  convex_hull(points, NUM_PTS,
+  convex_hull(points, num_pts,
 	      hull, &hullSize);
   auto convex_hull_stop = std::clock();
   double convex_hull_duration = 1000.0 * (convex_hull_stop - convex_hull_start) / CLOCKS_PER_SEC;
@@ -127,7 +130,7 @@ if (GEN_PTS) {
   std::vector<std::vector<dPoint2> > sets;
 
   auto outer_triangle_start = std::clock();
-  outer_triangle_partition(points, NUM_PTS,
+  outer_triangle_partition(points, num_pts,
 			  hull, hullSize,
 			  sets);
   auto outer_triangle_stop = std::clock();
@@ -135,7 +138,7 @@ if (GEN_PTS) {
 
 #if WITH_HCONLIB
   
-  for(int i = 0; i < NUM_PTS; i++) {
+  for(int i = 0; i < num_pts; i++) {
     vas[screenY(points[i].y) * width + screenX(points[i].x)] = 0x00FF00;
   }
 

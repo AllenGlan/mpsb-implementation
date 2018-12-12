@@ -5,22 +5,62 @@
 #include <common.hpp>
 #include <drawing.hpp>
 
+// For performance analysis
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <chrono>
 
-#define NUM_PTS 6000
+#define PTS_FILE ("pts_file.csv")
+#define PERF_FILE ("perf_file.csv")
 
-dPoint2 points[NUM_PTS];
+#define NUM_PTS_MAX 100000
+#define FIND_REPEATS 100000
+
+dPoint2 points[NUM_PTS_MAX];
 
 
 int main(int argc, const char** argv) {
+  // random point generation
+  /*
   if(argc > 1) {
     srand(atoi(argv[1]));
   } else {
     srand(12345);
   }
 
-  for(int i = 0; i <NUM_PTS; i++) {
+  for(int i = 0; i <NUM_PTS_MAX; i++) {
     points[i] = dPoint2((rand() % 13141),
 			(rand() % 12419));
+  }
+  */
+
+  // read points from file
+  int num_pts = 0;
+
+  std::string line;
+  std::ifstream pts_file PTS_FILE;
+  if (pts_file.is_open()) {
+    for (int i = 0; i < NUM_PTS_MAX; i++){
+      if (getline(pts_file, line)) {
+        std::stringstream ss(line);
+        std::vector<double> pnt;
+        while(ss.good()) {
+          std::string coord;
+          getline(ss, coord, ',');
+          pnt.push_back(std::stod(coord));
+        }
+        points[i] = dPoint2(pnt[0], pnt[1]);
+        num_pts++;
+      } else {
+        break;
+      }
+    }
+    pts_file.close();
+  } else {
+    std::cout << "Unable to open " << PTS_FILE << "\n";
   }
   
 #if WITH_HCONLIB
@@ -33,20 +73,18 @@ int main(int argc, const char** argv) {
     vas[i] = 0;
   }
 
-  compute_max_dims(points, NUM_PTS);
+  compute_max_dims(points, num_pts);
 
   initialize_visualization(&win, &vas, width, height);
 
 #endif // WITH_HCONLIB
-
-  
 
   std::function<bool(const dPoint2& p1, const dPoint2& p2)> x_comparator =
     [](const dPoint2& p1, const dPoint2& p2) {return p1.x < p2.x;};
   std::function<bool(const dPoint2& p1, const dPoint2& p2)> y_comparator =
     [](const dPoint2& p1, const dPoint2& p2) {return p1.y < p2.y;};
 
-  dPoint2 halfplane_dir(21.0, 10.0);
+  dPoint2 halfplane_dir(1.0, 1.0);
 
   std::function<bool(const dPoint2& p1, const dPoint2& p2)> halfplane_comparator =
     [=](const dPoint2& p1, const dPoint2& p2) {
@@ -60,21 +98,29 @@ int main(int argc, const char** argv) {
 
   // Don't forget to sort!!
 
-  std::sort(points, points + NUM_PTS, comparators[0]);
+  std::sort(points, points + num_pts, comparators[0]);
   
-  RangeTree* tree = build_tree(3, comparators, points, NUM_PTS);
+  auto build_start = std::chrono::high_resolution_clock::now();
+  RangeTree* tree = build_tree(3, comparators, points, num_pts);
+  auto build_stop = std::chrono::high_resolution_clock::now();
+  double build_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(build_stop - build_start).count();
   
   std::vector<RangeTree*> subtrees;
 
-  range_tree_find_subtrees(tree,
-			   4000, 15000,
-			   5000, 8000,
-			   dPoint2(6000, 10000), true,
-			   subtrees);
+  auto find_start = std::chrono::high_resolution_clock::now();
+  for (int i = 0; i < FIND_REPEATS; i++) {
+    range_tree_find_subtrees(tree,
+	  		   -500, 500,
+	  		   -500, 500,
+	  		   dPoint2(0, 0), true,
+	  		   subtrees);
+  }
+  auto find_stop = std::chrono::high_resolution_clock::now();
+  double find_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(find_stop - find_start).count() / FIND_REPEATS;
 
 #if WITH_HCONLIB
 
-  for(int i = 0; i < NUM_PTS; i++) {
+  for(int i = 0; i < num_pts; i++) {
     vas[screenX(points[i].x) + screenY(points[i].y) * width] = 0x00FF00;
   }
   
@@ -110,4 +156,14 @@ int main(int argc, const char** argv) {
   destroy_tree(tree);
 
 #endif // WITH_HCONLIB
+
+  // write and print performance information
+  std::ofstream perf_file;
+  perf_file.open(PERF_FILE);
+  perf_file << "build" << "," << build_duration << std::endl;
+  perf_file << "find" << "," << find_duration << std::endl;
+  perf_file.close();
+
+  std::cout << "Time: Build: " << build_duration << " ns" << std::endl;
+  std::cout << "Time: Find: " << find_duration << " ns" << std::endl;
 }
