@@ -6,7 +6,12 @@
 #include <drawing.hpp>
 
 
-#define NUM_PTS 6000
+const int dimx = 1 << 4;
+const int dimy = 1 << 4;
+const double rr = 10;
+const int num_perim = 10;
+
+const int NUM_PTS = dimx * dimy * num_perim;
 
 dPoint2 points[NUM_PTS];
 
@@ -18,10 +23,25 @@ int main(int argc, const char** argv) {
     srand(12345);
   }
 
-  for(int i = 0; i <NUM_PTS; i++) {
+/*for(int i = 0; i <NUM_PTS; i++) {
     points[i] = dPoint2((rand() % 13141),
 			(rand() % 12419));
-  }
+			}*/
+  
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
+  std::normal_distribution<double> distribution(0, 1e-2); // Add random perturbation to avoid degeneracies (hopefully)
+  
+  for(int i = 0; i < dimx; i++) {
+    for(int j = 0; j < dimy; j++) {
+      dPoint2 center(rr * 3 * i, rr * 3 * j);
+      for(int k = 0; k < num_perim; k++) {
+	double theta = k * M_PI * 2 / num_perim;
+	points[(i * dimy * num_perim) + j * num_perim + k] = dPoint2(center.x + rr * sin(theta) + distribution(gen), center.y + rr * cos(theta) + distribution(gen));
+      }
+    }
+    }
+
   
 #if WITH_HCONLIB
   const int width = 600, height = 600;
@@ -46,7 +66,7 @@ int main(int argc, const char** argv) {
   std::function<bool(const dPoint2& p1, const dPoint2& p2)> y_comparator =
     [](const dPoint2& p1, const dPoint2& p2) {return p1.y < p2.y;};
 
-  dPoint2 halfplane_dir(21.0, 10.0);
+  dPoint2 halfplane_dir(10.0, 10.0);
 
   std::function<bool(const dPoint2& p1, const dPoint2& p2)> halfplane_comparator =
     [=](const dPoint2& p1, const dPoint2& p2) {
@@ -61,15 +81,16 @@ int main(int argc, const char** argv) {
   // Don't forget to sort!!
 
   std::sort(points, points + NUM_PTS, comparators[0]);
-  
-  RangeTree* tree = build_tree(3, comparators, points, NUM_PTS);
-  
-  std::vector<RangeTree*> subtrees;
 
+  RangeTree* tree = build_tree(3, comparators, points, NUM_PTS);
+
+
+  std::vector<RangeTree*> subtrees;
+  
   range_tree_find_subtrees(tree,
-			   4000, 15000,
-			   5000, 8000,
-			   dPoint2(6000, 10000), true,
+			   minx + 2 * rr + 1, maxx - 2 * rr - 1,
+			   miny + 2 * rr + 1, maxy - 2 * rr - 1,
+			   dPoint2(-20, -20), true,
 			   subtrees);
 
 #if WITH_HCONLIB
@@ -99,7 +120,6 @@ int main(int argc, const char** argv) {
     }
     vas[screenY(subtrees[i]->convexHull[0].y) * width + screenX(subtrees[i]->convexHull[0].x)] = 0xFFFFFF;
   }
-
 
   // Draw loop, listen for exit/escape key
   while(win.isOpen() && !win.isKeyPressed(WK_ESC)) {
