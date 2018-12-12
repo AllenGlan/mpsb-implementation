@@ -1,9 +1,9 @@
 # File Names
 #CFLAGS = -O  -s
 
-USE_HCONLIB = 0
+USE_HCONLIB = 1
 
-HCONLIB_ROOT = /home/allen/Programs/HConLib
+HCONLIB_ROOT = /home/haakon/Documents/Code/C++/HConLib
 HCONLIB_INCLUDE = $(HCONLIB_ROOT)/include
 HCONLIB_LIB = $(HCONLIB_ROOT)/lib
 
