@@ -224,12 +224,12 @@ The outer triangle partitioning, as described in \ref{subsub:outer_triangle_part
 \begin{figure}[h]
     \begin{floatrow}
         \ffigbox[\FBwidth][\FBheight][t]{
-            \includegraphics[width=0.5\textwidth]{outer_triangle_partition_performance}
+            \includegraphics[width=0.6\textwidth]{outer_triangle_partition_performance}
         }{
             \caption{Performance of the outer triangle partitioning}
             \label{fig:outer_triangle_partition_performance}
         }
-        \capbtabbox[0.45\textwidth][\FBheight][t]{
+        \capbtabbox[0.3\textwidth][\FBheight][t]{
             \small
             \begin{tabular}{cc}
                 Size $n$ & Running time (ms) \\
@@ -258,12 +258,12 @@ Both range tree construction and search are tested on point sets of size $n = 10
 \begin{figure}[h]
     \begin{floatrow}
         \ffigbox[\FBwidth][\FBheight][t]{
-            \includegraphics[width=0.5\textwidth]{range_tree_construction_performance}
+            \includegraphics[width=0.6\textwidth]{range_tree_construction_performance}
         }{
             \caption{Performance of the range tree construction}
             \label{fig:range_tree_construction_performance}
         }
-        \capbtabbox[0.45\textwidth][\FBheight][t]{
+        \capbtabbox[0.3\textwidth][\FBheight][t]{
             \small
             \begin{tabular}{cc}
                 Size $n$ & Running time (ms) \\
@@ -288,12 +288,12 @@ Both range tree construction and search are tested on point sets of size $n = 10
 \begin{figure}[h]
     \begin{floatrow}
         \ffigbox[\FBwidth][\FBheight][t]{
-            \includegraphics[width=0.5\textwidth]{range_tree_search_performance}
+            \includegraphics[width=0.6\textwidth]{range_tree_search_performance}
         }{
             \caption{Performance of the range tree search}
             \label{fig:range_tree_search_performance}
         }
-        \capbtabbox[0.45\textwidth][\FBheight][t]{
+        \capbtabbox[0.3\textwidth][\FBheight][t]{
             \small
             \begin{tabular}{cc}
                 Size $n$ & Running time ($\mathrm{\mu}$s) \\
@@ -320,32 +320,32 @@ The tangent computation, as described in \ref{subsub:tangent_computation}, is an
 \begin{figure}[h]
     \begin{floatrow}
         \ffigbox[\FBwidth][\FBheight][t]{
-            \includegraphics[width=0.5\textwidth]{tangent_computation_performance}
+            \includegraphics[width=0.6\textwidth]{tangent_computation_performance}
         }{
             \caption{Performance of the tangent computation}
             \label{fig:tangent_computation_performance}
         }
-        \capbtabbox[0.45\textwidth][\FBheight][t]{
+        \capbtabbox[0.3\textwidth][\FBheight][t]{
             \small
-            \begin{tabular}{ccc}
-                Hull size $n$ & $\log_2(n)$ & Running time (ns) \\
+            \begin{tabular}{cc}
+                $\log_2(n)$ & Running time (ns) \\
                 \hline
-                1 & 0 & 16.191 \\
-                2 & 1 & 77.376 \\
-                4 & 2 & 150.99 \\
-                8 & 3 & 210.307 \\
-                16 & 4 & 275.398 \\
-                32 & 5 & 335.235 \\
-                64 & 6 & 402.821 \\
-                128 & 7 & 465.305 \\
-                256 & 8 & 524.074 \\
-                512 & 9 & 589.302 \\
-                1024 & 10 & 645.533 \\
-                2048 & 11 & 713.073 \\
-                4096 & 12 & 778.048 \\
-                8192 & 13 & 853.159 \\
-                16384 & 14 & 918.426 \\
-                32768 & 15 & 996.516
+                0 & 16.191 \\
+                1 & 77.376 \\
+                2 & 150.99 \\
+                3 & 210.307 \\
+                4 & 275.398 \\
+                5 & 335.235 \\
+                6 & 402.821 \\
+                7 & 465.305 \\
+                8 & 524.074 \\
+                9 & 589.302 \\
+                10 & 645.533 \\
+                11 & 713.073 \\
+                12 & 778.048 \\
+                13 & 853.159 \\
+                14 & 918.426 \\
+                15 & 996.516
             \end{tabular}
         }{}
     \end{floatrow}
@@ -353,14 +353,81 @@ The tangent computation, as described in \ref{subsub:tangent_computation}, is an
 
 \subsection{Designing Adversarial Inputs}
 
-% Leverage the O(n log(n)) / O(n log^4(n)) distinction
-In this section, we aim to identify the characteristics of ``adversarial inputs'', that is, inputs that impose a worst-case scenario on one or more subroutines of the algorithm. In the theoretical analysis by Abrahamsem et al. \cite{abb17}, $O(\log^4 n)$ runtime bound is given as a function of the input size $n$. Given a fixed $n$, the runtime bound does not include any characterization of the distribution of the set of input points. Nonetheless, observe that in the tangent computation subroutine, the runtime is a function of the sizes of each polygon, rather than the number of points contained within each polygon. Therefore, it is necessary for us to investigate how the distribution of points within a point set impacts the performance of the tangent computation subroutine, as well as the entire algorithm.
+\subsubsection{Identifying the Performance Bottleneck}
+
+In this section, we aim to identify the characteristics of ``adversarial inputs'', that is, inputs that impose a worst-case scenario on one or more subroutines of the algorithm. Recall from \figref{fig:hierarchy} that the $O(n\log^4)$ overall running time of this algorithm is produced by $O(n)$ calls to the $O(\log^4 n)$ subroutine of \texttt{half\_plane\_intersects}, which can be further dissected into $O(\log^3 n)$ calls to the $O(\log n)$ tangent computation subroutine (\texttt{compute\_tangent}). Therefore, the critical chain for acheiving this $O(n \log^4 n)$ is as \figref{fig:tangent_dependencies}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{tangent_dependencies}
+    \caption{The critical chain for acheiving $O(n \log^4 n)$ running time}
+    \label{fig:tangent_dependencies}
+\end{figure}
+
+In the theoretical analysis by Abrahamsem et al. \cite{abb17}, the $O(\log^4 n)$ running time bound is given as a function of the input size $n$. Given a fixed $n$, the running time bound does not include any characterization of the distribution of the set of input points. Nonetheless, observe that in the tangent computation subroutine, the running time is a function of the sizes of each polygon, rather than the number of points contained within each polygon. Therefore, it is necessary for us to investigate how the distribution of points within a point set impacts the performance of the tangent computation subroutine, as well as the entire algorithm.
 
 To be concrete, given a process of generating a point set $P$, we are interested in the expected complexity of $\CH(P)$. We first formalize the process of generating a point set. Given a bounded convex set $\mathcal{R} \subset \mathbb{R}^2$, as well as the number of points $n$. A point set $P_\mathcal{R}^D$ is generated via $n$ independent random samples of $\mathcal{R}$ under distribution $D$. Let $h_\mathcal{R}(n)^D$ denote the expected size of $\CH(P)$. Efron \cite{efr65} showed that if the expected area of $\CH(P)$ is at least $(1-f(n)) \mathrm{Area}(\mathcal{R})$, where $1 \geq f(n) \geq 0$ for $n \geq 0$, then the expected size of $\CH(P)$ is at most $nf(n/2)$ under uniform distribution. Based on this result, Har-Peled \cite{hp11} showed that if $\mathcal{R}$ resembles a convex polygon with $k$ sides, then $h_\mathcal{R}^U = O(k \log n)$, where $U$ denotes a uniform distribution over $\mathcal{R}$. And if $\mathcal{R}$ resembles a disk, then $h_\mathcal{R}^U = O(n^{1/3})$. On a more practical note, Raynaud \cite{ray70}, via integral estimation, showed that under $D \equiv N$ a normal distribution over $\mathcal{R}$, $h_\mathcal{R}^N = O((\log(n)^{1/2})$. Based on these findings, we will attempt to design a worst-case input for a fixed point-set size $n$ selected via independent uniform samples over a convex region. We will then compare this result with the point set selected under normal distribution. For completeness, we will also include the extreme case, where all points lie on the convex hull of the point set.
 
 \subsubsection{Uniform Random Sampling on a Disk}
 
+We test the tangent computation subroutine with input sets derived by uniform random sampling on a disk. The tangent computation subroutine is tested on input set size $n = 2^k$ for each $k \in [0, 9]$. For each $k$, the two point sets of size $2^k$ are independently generated by taking $2^k$ random samples on a unit disk under uniform distribution. The results are presented in \figref{fig:uniform_disk_input}. Observe that sampling on a disk exhibits a sublinear pattern with respect to $\log_2(n)$, as compared to the linear pattern exhibited by sampling directly on a circle. This observation is qualitatively in line with the $O(n^{1/3})$ expected hull size by Har-Peled \cite{hp11}.
 
+\begin{figure}[h]
+    \begin{floatrow}
+        \ffigbox[\FBwidth][\FBheight][t]{
+            \includegraphics[width=0.6\textwidth]{uniform_disk_input}
+        }{
+            \caption{Performance of uniform random sampling on disk}
+            \label{fig:uniform_disk_input}
+        }
+        \capbtabbox[0.3\textwidth][\FBheight][t]{
+            \small
+            \begin{tabular}{cc}
+                $\log_2(n)$ & Running time (ns) \\
+                \hline
+                0 & 16.371 \\
+                1 & 78.192 \\
+                2 & 127.893 \\
+                3 & 167.572 \\
+                4 & 197.670 \\
+                5 & 223.183 \\
+                6 & 257.281 \\
+                7 & 279.767 \\
+                8 & 309.755 \\
+                9 & 328.822
+            \end{tabular}
+        }{}
+    \end{floatrow}
+\end{figure}
+
+\subsubsection{Uniform Random Sampling in a Polygon}
+
+Next, we test the tangent computation subroutine with input sets derived by uniform random sampling in the area enclosed by a polygon. The tangent computation subroutine is tested on input size $n = 2^k$ for each $k \in [0, 9]$. For each $k$, the two point sets of size $2^k$ are independently generated by taking $2^k$ random samples in the area enclosed by a polygon under uniform distribution. For this test, regular polygons of $3$, $4$ and $5$ sides are used. The results are presented in \figref{fig:uniform_polygon_input} and \tabref{tab:uniform_polygon_input}. Observe that sampling in a polygon exhibits a sublinear pattern with respect to $\log_2(n)$. Addtionally, the running time increases as the number of sides $\gamma$ increases. These findings are in line with the $O(\gamma \log n)$ expected hull size by Har-Peled \cite{hp11}.
+
+\begin{figure}[h]
+    \includegraphics[width=0.6\textwidth]{uniform_polygon_input}
+    \caption{Performance of uniform random sampling in polygons}
+    \label{fig:uniform_polygon_input}
+\end{figure}
+
+\begin{table}[h]
+    \begin{tabular}{cccc}
+        $\log_2(n)$ & 3-sided time (ns) & 4-sided time (ns) & 5-sided time (ns) \\
+        \hline
+        0 & 15.965 & 15.952 & 16.088 \\
+        1 & 76.272 & 74.553 & 75.002 \\
+        2 & 130.562 & 125.597 & 127.57 \\
+        3 & 162.382 & 158.997 & 164.573 \\
+        4 & 178.309 & 183.507 & 192.230 \\
+        5 & 194.411 & 200.815 & 215.828 \\
+        6 & 205.253 & 220.388 & 235.682 \\
+        7 & 218.142 & 235.914 & 252.868 \\
+        8 & 230.136 & 247.495 & 260.496 \\
+        9 & 237.814 & 259.173 & 272.446
+    \end{tabular}
+    \caption{Performance statistics of uniform random sampling in polygons}
+    \label{tab:uniform_polygon_input}
+\end{table}
 
 %\subsection{Input Generation via Gradient Descent}
 
