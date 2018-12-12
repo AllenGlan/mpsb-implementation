@@ -33,7 +33,7 @@ static void combine_convex_hulls(dPoint2* hull1, int n1,
     while(!(cross( hull1[(i + 1) % n1] - hull1[i],
 		  hull2[0] - hull1[(i + 1) % n1]) >= 0 &&
 	    cross( hull1[(i + 2) % n1] - hull1[(i + 1) % n1],
-		   hull2[0] - hull1[(i + 1) % n1]) <= 0)){
+		   hull2[0] - hull1[(i + 1) % n1]) < 0)){ 
       i = (i + 1) % n1;
     }
     i = (i + 1) % n1;
@@ -42,7 +42,7 @@ static void combine_convex_hulls(dPoint2* hull1, int n1,
     while(!(cross(hull1[(j + 1) % n1] - hull1[j],
 		  hull2[0] - hull1[(j + 1)% n1]) <= 0 &&
 	    cross( hull1[(j + 2) % n1] - hull1[(j + 1) % n1],
-		   hull2[0] - hull1[(i + 1) % n1]) >= 0)) {
+		   hull2[0] - hull1[(i + 1) % n1]) > 0)) {
       j = (j + 1) % n1;
     }
     j = (j + 1) % n1;
