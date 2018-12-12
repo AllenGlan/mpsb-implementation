@@ -19,6 +19,20 @@
 #include <cstdio>
 #include <random>
 
+// For performance analysis
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <chrono> // need high resolution for this O(log n) algorithm
+
+#define PTS_P_FILE ("pts_p_file.csv")
+#define PTS_Q_FILE ("pts_q_file.csv")
+#define PERF_FILE ("perf_file.csv")
+#define TANG_REPEATS (100000)
+
+// Note that MAXPTS is defined in tangent.h
 
 int xToDisplay(double x, int w) {
   return (int)(((x + 2 * 1024)+ 500) / (5. * 1024  + 1000) * w);
@@ -27,7 +41,6 @@ int xToDisplay(double x, int w) {
 int yToDisplay(double y, int h) {
   return (int)(((y + 1024) + 500) / (2048  + 1000) * h);
 }
-
 
 int main(int argc, const char ** argv) {
 
@@ -48,7 +61,58 @@ int main(int argc, const char ** argv) {
     vas[i] = 0;
   }
 #endif // WITH_HCONLIB
+
+  Polygon P, Q;
+
+  // read P from file
+  std::ifstream pts_p_file PTS_P_FILE;
+  if (pts_p_file.is_open()) {
+    std::string line;
+    int lc = 0;
+    while (getline(pts_p_file, line)) {
+      std::stringstream ss(line);
+      std::vector<double> pnt;
+      while(ss.good()) {
+        std::string coord;
+        getline(ss, coord, ',');
+        pnt.push_back(std::stod(coord));
+      }
+      P.v[lc][0] = pnt[0];
+      P.v[lc][1] = pnt[1];
+      lc++;
+    }
+    pts_p_file.close();
+    P.n = lc;
+  } else {
+    std::cout << "Unable to open " << PTS_P_FILE << "\n";
+  }
+
+  // read Q from file
+  std::ifstream pts_q_file PTS_Q_FILE;
+  if (pts_q_file.is_open()) {
+    std::string line;
+    int lc = 0;
+    while (getline(pts_q_file, line)) {
+      std::stringstream ss(line);
+      std::vector<double> pnt;
+      while(ss.good()) {
+        std::string coord;
+        getline(ss, coord, ',');
+        pnt.push_back(std::stod(coord));
+      }
+      Q.v[lc][0] = pnt[0];
+      Q.v[lc][1] = pnt[1];
+      lc++;
+    }
+    pts_q_file.close();
+    Q.n = lc;
+  } else {
+    std::cout << "Unable to open " << PTS_Q_FILE << "\n";
+  }
+
+  std::cout << "Read P with " << P.n << " points and Q with " << Q.n << " points." << std::endl;
   
+  /* Random polygon is deprecated
   // Fill in the polygons
   Polygon P, Q;
 
@@ -64,6 +128,7 @@ int main(int argc, const char ** argv) {
     Q.v[i][0] = ((rand() % 2048) + 1024) ;
     Q.v[i][1] = ((rand() % 2048) - 1024);
   }
+  */
 
   // Compute convex hulls
 
@@ -80,7 +145,21 @@ int main(int argc, const char ** argv) {
 
   
   // Compute common tangent
-  Tang(&pc, &qc);
+
+  auto tang_start = std::chrono::high_resolution_clock::now();
+  for (int i = 0; i < TANG_REPEATS; i++) {
+    Tang(&pc, &qc);
+  }
+  auto tang_stop = std::chrono::high_resolution_clock::now();
+  double tang_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(tang_stop - tang_start).count() / TANG_REPEATS;
+
+  // write and print performance information
+  std::ofstream perf_file;
+  perf_file.open(PERF_FILE);
+  perf_file << "tang" << "," << tang_duration << std::endl;
+  perf_file.close();
+
+  std::cout << "Time: Tangent: " << tang_duration << "ns" << std::endl;
 
   // The rest is visualizing the result (which won't happen if you don't use HCONLIB)
 

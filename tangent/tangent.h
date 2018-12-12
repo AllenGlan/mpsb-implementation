@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define MAXPTS 2000              /* Maximum number of points per polyline */
+#define MAXPTS 100000           /* Maximum number of points per polyline */
 #define EPSILON 1.0e-13         /* Approximation of zero */
 #define SQRhf M_SQRT1_2
 #define TWO_PI 2*M_PI
